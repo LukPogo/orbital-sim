@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run orbital_sim",
+            "type": "python",
+            "request": "launch",
+            "module": "orbital_sim.main",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
