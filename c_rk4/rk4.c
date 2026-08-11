@@ -7,25 +7,67 @@ struct OrbitalData {
     const double G;
 };
 
-void vector_derivative(double t, double *y, int size_y, double *v) {
-    for (int i = 0; i < size_y; i++) {
-        v[i] = y[i];
-    }
-}
-
 void two_body_derivative(double t, const double *y, int size_y,
-                         double *y_derivative, void *params);
+                         double *y_derivative, const void *params) {
+    const struct OrbitalData *data = params;
+    double m1 = data->m1;
+    double m2 = data->m2;
+    double G = data->G;
+    double r[3];
+    double r3;
+    double a1[3];
+    double a2[3];
 
-void vector_derivative_test(double t, const double *y, int size_y,
-                            double *y_derivative) {
-    y_derivative[0] = y[1];
-    y_derivative[1] = -y[0];
+    (void)size_y;
+    (void)t;
+
+    double x1, x2, y1, y2, z1, z2;
+
+    x1 = y[0];
+    y1 = y[1];
+    z1 = y[2];
+
+    x2 = y[6];
+    y2 = y[7];
+    z2 = y[8];
+
+    r[0] = x2 - x1;
+    r[1] = y2 - y1;
+    r[2] = z2 - z1;
+
+    r3 = sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+
+    r3 = pow(r3, 3);
+
+    a1[0] = G * m2 / r3 * r[0];
+    a1[1] = G * m2 / r3 * r[1];
+    a1[2] = G * m2 / r3 * r[2];
+
+    a2[0] = -G * m1 / r3 * r[0];
+    a2[1] = -G * m1 / r3 * r[1];
+    a2[2] = -G * m1 / r3 * r[2];
+
+    y_derivative[0] = y[3];
+    y_derivative[1] = y[4];
+    y_derivative[2] = y[5];
+
+    y_derivative[6] = y[9];
+    y_derivative[7] = y[10];
+    y_derivative[8] = y[11];
+
+    y_derivative[3] = a1[0];
+    y_derivative[4] = a1[1];
+    y_derivative[5] = a1[2];
+
+    y_derivative[9] = a2[0];
+    y_derivative[10] = a2[1];
+    y_derivative[11] = a2[2];
 }
 
 void rk4_step(double t, const double *y, int size_y,
               void (*state_derivative)(double t, const double *y, int size_y,
-                                       double *v, void *params),
-              double h, double *y_out, void *params) {
+                                       double *v, const void *params),
+              double h, double *y_out, const void *params) {
 
     double k1[size_y];
     double k2[size_y];
@@ -33,25 +75,25 @@ void rk4_step(double t, const double *y, int size_y,
     double k4[size_y];
     double y_temp[size_y];
 
-    state_derivative(t, y, size_y, k1);
+    state_derivative(t, y, size_y, k1, params);
 
     for (int i = 0; i < size_y; i++) {
         y_temp[i] = y[i] + k1[i] * h / 2;
     }
 
-    state_derivative(t + h / 2, y_temp, size_y, k2);
+    state_derivative(t + h / 2, y_temp, size_y, k2, params);
 
     for (int i = 0; i < size_y; i++) {
         y_temp[i] = y[i] + k2[i] * h / 2;
     }
 
-    state_derivative(t + h / 2, y_temp, size_y, k3);
+    state_derivative(t + h / 2, y_temp, size_y, k3, params);
 
     for (int i = 0; i < size_y; i++) {
         y_temp[i] = y[i] + k3[i] * h;
     }
 
-    state_derivative(t + h, y_temp, size_y, k4);
+    state_derivative(t + h, y_temp, size_y, k4, params);
 
     for (int i = 0; i < size_y; i++) {
         y_out[i] = y[i] + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
@@ -66,9 +108,9 @@ void refresh_vector(double *y, double *x, int size_y) {
 
 void rk4(double t0, double *y0, int size_y,
          void (*state_derivative)(double t, const double *y, int size_y,
-                                  double *v, void *params),
+                                  double *v, const void *params),
          double h, int steps, double *y_history, double *t_history,
-         void *params) {
+         const void *params) {
 
     double y[size_y];
     double t = t0;
@@ -78,7 +120,7 @@ void rk4(double t0, double *y0, int size_y,
     t_history[0] = t;
 
     for (int step = 0; step < steps; step++) {
-        rk4_step(t, y, size_y, state_derivative, h, y_out);
+        rk4_step(t, y, size_y, state_derivative, h, y_out, params);
         t = t + h;
         refresh_vector(y, y_out, size_y);
         for (int i = 0; i < size_y; i++) {
@@ -90,22 +132,49 @@ void rk4(double t0, double *y0, int size_y,
     refresh_vector(y0, y, size_y);
 }
 
+void two_body_wrapper(double *y0, double t0, double h, int steps,
+                      const struct OrbitalData *params, double *y_history,
+                      double *t_history) {
+    int size_y = 12;
+
+    rk4(t0, y0, size_y, two_body_derivative, h, steps, y_history, t_history,
+        params);
+}
+
 int main() {
     double t = 0;
-    double y0 = 1;
-    double y1 = 1;
+    double x2 = 6371e3 + 400e3;
 
-    int steps = 2;
-    int size_y = 2;
+    struct OrbitalData ei_params = {
+        .m1 = 5.9722e24, .m2 = 4.5e5, .G = 6.67430151515e-11};
+
+    int steps = 50000;
+    int size_y = 12;
+
     double y[size_y];
     double y_history[size_y * (steps + 1)];
-    y[0] = y0;
-    y[1] = y1;
+    double t_history[steps + 1];
 
-    rk4(t, y, size_y, vector_derivative_test, 0.01, steps, y_history);
+    for (int i = 0; i < size_y; i++) {
+        y[i] = 0;
+    }
+
+    y[6] = x2;
+    y[10] = 7.66e3;
+
+    // double y_derivative[size_y];
+    // two_body_derivative(t, y, size_y, y_derivative, &ei_params);
+
+    // printf("Wektor stanu: \n");
+    // for (int i = 0; i < size_y; i++) {
+    //     printf("Wartosc %d:\t%e\n", i, y_derivative[i]);
+    // }
+
+    rk4(t, y, size_y, two_body_derivative, 0.01, steps, y_history, t_history,
+        &ei_params);
 
     for (int i = 0; i < size_y * (steps + 1); i++) {
-        printf("Wyjście %d: %lf\n", i % size_y, y_history[i]);
+        printf("Wyjście %d: %e\n", i % size_y, y_history[i]);
     }
 
     return 0;
