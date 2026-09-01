@@ -40,8 +40,10 @@ def main():
 
     print(error_values(ref_traj, rk4_traj))
 
-    plot_earth_center(rk4_traj[:, 0:6], rk4_traj[:, 6:12])
-    plot_reference_comparison(ref_traj, rk4_traj, ref_time)
+    # plot_earth_center(rk4_traj[:, 0:6], rk4_traj[:, 6:12])
+    # plot_reference_comparison(ref_traj, rk4_traj, ref_time)
+
+    animate_orbiting_object(rk4_traj[:, 0:3], rk4_traj[:, 6:9], rk4_time)
 
 
 if __name__ == "__main__":
