@@ -6,15 +6,24 @@ from .dynamics import state_dot
 from .c_rk4 import rk4
 from .storage import h5_save_time_traj, h5_load_time_traj, initialize_h5_file
 from .analysis import error_values
-from .visualization import plot_earth_center, plot_reference_comparison
+from .visualization import (
+    plot_earth_center,
+    plot_reference_comparison,
+    animate_orbiting_object,
+)
+from .nasa_api import get_nasa_data
 
 
 def main():
-    state_0 = np.array(
-        [0, 0, 0, 0, 0, 0, R_EARTH + ORB_HEIGHT, 0, 0, 0, VEL_ISS, 0], dtype=np.float64
-    )
+    nasa_data = get_nasa_data()
+
+    earth_state = np.zeros(6, dtype=np.float64)
+    iss_state = nasa_data[0, :]
+
+    state_0 = np.concatenate((earth_state, iss_state))
+
     t0 = 0
-    tk = 100000
+    tk = 86400
     h = 2.5
     steps = int((tk - t0) / h)
     t_span = [t0, tk]
