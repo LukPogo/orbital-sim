@@ -23,5 +23,13 @@ def get_nasa_data():
             continue
 
     states = np.array(list(flight_data.values()))
+    t_0 = np.array(list(flight_data.keys()))[0]
+    time = np.array(list(flight_data.keys())) - t_0
 
-    return states
+    time_seconds = np.array([delta.total_seconds() for delta in time])
+
+    return time_seconds, states
+
+
+if __name__ == "__main__":
+    get_nasa_data()
