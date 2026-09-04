@@ -3,7 +3,7 @@ import argparse
 
 from .data_generation import generate_data
 from .storage import h5_load_time_traj
-from .analysis import error_values
+from .analysis import error_values, error_reduction
 from .visualization import (
     plot_earth_center,
     plot_reference_comparison,
@@ -26,9 +26,12 @@ def main():
 
     rk4_time, rk4_traj = h5_load_time_traj("data.hdf5", "rk4")
     ref_time, ref_traj = h5_load_time_traj("data.hdf5", "reference")
+    ref_time_J2, ref_traj_J2 = h5_load_time_traj("data.hdf5", "reference_J2")
+    rk4_time_J2, rk4_traj_J2 = h5_load_time_traj("data.hdf5", "rk4_J2")
     nasa_time, nasa_traj = h5_load_time_traj("data.hdf5", "nasa")
 
-    print(error_values(ref_traj, rk4_traj))
+    # r_error, v_error = error_values(ref_traj, rk4_traj)
+    # print(r_error[-1], v_error[-1])
 
     plot_earth_center(rk4_traj[:, 0:6], rk4_traj[:, 6:12])
     plot_reference_comparison(ref_traj, rk4_traj, ref_time)
@@ -43,10 +46,18 @@ def main():
     rk4_indices = nasa_time.astype(int)
 
     rk4_at_nasa_times = rk4_traj[rk4_indices, :]
+    rk4_at_nasa_times_J2 = rk4_traj_J2[rk4_indices, :]
 
     plot_reference_comparison(nasa_traj, rk4_at_nasa_times, nasa_time)
 
     animate_earth_iss_3d_comparison(nasa_traj, rk4_at_nasa_times, nasa_time)
+
+    r_error, v_error = error_values(nasa_traj, rk4_at_nasa_times)
+    r_error_J2, v_error_J2 = error_values(nasa_traj, rk4_at_nasa_times_J2)
+
+    improvement = error_reduction(r_error[-1], r_error_J2[-1])
+
+    print(improvement)
 
 
 if __name__ == "__main__":
