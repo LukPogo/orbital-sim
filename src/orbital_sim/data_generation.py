@@ -25,7 +25,7 @@ def generate_data():
     t_span = [t0, tk]
     t_eval = t0 + h * np.arange(steps + 1)
 
-    time, trajectory = rk4(state_0, t0, h, steps)
+    time, trajectory = rk4(state_0, t0, h, steps, False)
     sol = solve_ivp(
         state_dot,
         t_span,
@@ -34,6 +34,7 @@ def generate_data():
         method="DOP853",
         rtol=1e-13,
         atol=1e-15,
+        args=[False],
     )
 
     print("Generating data finished...")
@@ -42,5 +43,20 @@ def generate_data():
     h5_save_time_traj("data.hdf5", "rk4", time, trajectory)
     h5_save_time_traj("data.hdf5", "reference", sol.t, sol.y.T)
     h5_save_time_traj("data.hdf5", "nasa", nasa_time, nasa_full_traj)
+
+    time, trajectory = rk4(state_0, t0, h, steps, True)
+
+    sol = solve_ivp(
+        state_dot,
+        t_span,
+        state_0,
+        t_eval=t_eval,
+        method="DOP853",
+        rtol=1e-13,
+        atol=1e-15,
+        args=[True],
+    )
+    h5_save_time_traj("data.hdf5", "rk4_J2", time, trajectory)
+    h5_save_time_traj("data.hdf5", "reference_J2", sol.t, sol.y.T)
 
     print("Saving data finished...")
