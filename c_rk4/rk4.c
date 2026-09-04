@@ -1,10 +1,14 @@
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 struct OrbitalData {
     const double m1;
     const double m2;
     const double G;
+    const double r_earth_J2;
+    const double J2;
+    const bool use_J2;
 };
 
 void two_body_derivative(double t, const double *y, int size_y,
@@ -13,6 +17,9 @@ void two_body_derivative(double t, const double *y, int size_y,
     double m1 = data->m1;
     double m2 = data->m2;
     double G = data->G;
+    double r_earth_J2 = data->r_earth_J2;
+    double J2 = data->J2;
+    bool use_J2 = data->use_J2;
     double r[3];
     double r3;
     double a1[3];
@@ -35,9 +42,9 @@ void two_body_derivative(double t, const double *y, int size_y,
     r[1] = y2 - y1;
     r[2] = z2 - z1;
 
-    r3 = sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+    double r_abs = sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
 
-    r3 = pow(r3, 3);
+    r3 = pow(r_abs, 3);
 
     a1[0] = G * m2 / r3 * r[0];
     a1[1] = G * m2 / r3 * r[1];
@@ -46,6 +53,24 @@ void two_body_derivative(double t, const double *y, int size_y,
     a2[0] = -G * m1 / r3 * r[0];
     a2[1] = -G * m1 / r3 * r[1];
     a2[2] = -G * m1 / r3 * r[2];
+
+    if (use_J2 == 1) {
+        double aJ2[3];
+        double r2 = pow(r_abs, 2);
+        double r5 = pow(r_abs, 5);
+        double bJ2 = 3 * m1 * G * J2 * pow(r_earth_J2, 2) / (2 * r5);
+        aJ2[0] = bJ2 * r[0] * (5 * pow(r[2], 2) / r2 - 1);
+        aJ2[1] = bJ2 * r[1] * (5 * pow(r[2], 2) / r2 - 1);
+        aJ2[2] = bJ2 * r[2] * (5 * pow(r[2], 2) / r2 - 3);
+
+        a1[0] = a1[0] - aJ2[0] * (m2 / m1);
+        a1[1] = a1[1] - aJ2[1] * (m2 / m1);
+        a1[2] = a1[2] - aJ2[2] * (m2 / m1);
+
+        a2[0] = a2[0] + aJ2[0];
+        a2[1] = a2[1] + aJ2[1];
+        a2[2] = a2[2] + aJ2[2];
+    }
 
     y_derivative[0] = y[3];
     y_derivative[1] = y[4];
