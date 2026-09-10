@@ -1,11 +1,18 @@
 import numpy as np
 from cffi import FFI
 
-from .constants import R_EARTH_J2, J2_EARTH, VEL_ISS, G, M_EARTH, M_ISS, MU_EARTH
+from .constants import R_EARTH_J2, J2_EARTH, M_EARTH, M_ISS, MU_EARTH
 
 
-def rk4(state_0: np.ndarray, t0: float, h: float, steps: int, use_J2: bool):
+def rk4(
+    state_0: np.ndarray, t0: float, h: float, steps: int, use_J2: bool
+) -> tuple[np.ndarray, np.ndarray]:
     size_y = state_0.shape[0]
+
+    if state_0.shape != (12,):
+        raise ValueError("state_0 must have shape (12,)")
+
+    state_0 = np.ascontiguousarray(state_0, dtype=np.float64)
 
     y_his = np.empty(size_y * (steps + 1))
     t_his = np.empty(steps + 1)

@@ -1,7 +1,9 @@
 import numpy as np
 
 
-def error_values(ref_traj: np.ndarray, traj: np.ndarray):
+def error_values(
+    ref_traj: np.ndarray, traj: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     ref_r = ref_traj[:, 6:9] - ref_traj[:, 0:3]
     traj_r = traj[:, 6:9] - traj[:, 0:3]
 

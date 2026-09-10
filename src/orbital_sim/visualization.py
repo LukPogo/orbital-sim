@@ -20,11 +20,19 @@ def plot_earth_center(earth_traj: np.ndarray, iss_traj: np.ndarray):
     earth = Circle((0, 0), R_EARTH, label="Earth", color="sienna")
     ax.add_patch(earth)
     ax.legend(loc="upper right")
+    fig.savefig(
+        "docs/images/earth_centered_trajectory.png",
+        dpi=150,
+        bbox_inches="tight",
+    )
     plt.show()
 
 
 def plot_reference_comparison(
-    ref_traj: np.ndarray, rk4_traj: np.ndarray, time: np.ndarray
+    ref_traj: np.ndarray,
+    rk4_traj: np.ndarray,
+    time: np.ndarray,
+    output_path: str,
 ):
     r_ref_relative = ref_traj[:, 6:9] - ref_traj[:, 0:3]
     r_rk4_relative = rk4_traj[:, 6:9] - rk4_traj[:, 0:3]
@@ -35,6 +43,11 @@ def plot_reference_comparison(
     ax.set_ylabel(r"$\|\Delta \mathbf{r}(t)\|$ [m]")
     ax.set_title("ISS position error against reference (Earth-centered)")
     ax.plot(time, delta_r)
+    fig.savefig(
+        output_path,
+        dpi=150,
+        bbox_inches="tight",
+    )
     plt.show()
 
 
@@ -77,7 +90,7 @@ def animate_earth_iss_2d(
         return iss, iss_trail
 
     ani = animation.FuncAnimation(
-        fig=fig, func=update, frames=range(0, rel.shape[0], 20), interval=10
+        fig=fig, func=update, frames=range(0, rel.shape[0], 1000), interval=10
     )
     plt.show()
 
@@ -179,6 +192,26 @@ def animate_earth_iss_3d_comparison(
         return nasa_plot, rk4_plot, rk4_marker, nasa_marker
 
     ani = animation.FuncAnimation(
-        fig=ax.figure, func=update, frames=range(0, nasa_time.shape[0], 1), interval=20
+        fig=ax.figure,
+        func=update,
+        frames=range(0, nasa_time.shape[0], 1),
+        interval=20,
     )
+
+    one_day = 24 * 3600
+    last_frame = np.searchsorted(nasa_time, one_day)
+
+    ani_save = animation.FuncAnimation(
+        fig=ax.figure,
+        func=update,
+        frames=range(0, last_frame, 10),
+        interval=20,
+    )
+
+    ani_save.save(
+        "docs/gifs/nasa_rk4_comparison.gif",
+        writer="pillow",
+        fps=20,
+    )
+
     plt.show()

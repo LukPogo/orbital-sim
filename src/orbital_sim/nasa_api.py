@@ -3,9 +3,10 @@ import requests
 from datetime import datetime
 
 
-def get_nasa_data():
+def get_nasa_data() -> tuple[np.ndarray, np.ndarray]:
     url = "https://nasa-public-data.s3.amazonaws.com/iss-coords/current/ISS_OEM/ISS.OEM_J2K_EPH.txt"
-    response = requests.get(url)
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
 
     lines = response.text.splitlines()
 
@@ -29,7 +30,3 @@ def get_nasa_data():
     time_seconds = np.array([delta.total_seconds() for delta in time])
 
     return time_seconds, states
-
-
-if __name__ == "__main__":
-    get_nasa_data()

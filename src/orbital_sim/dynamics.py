@@ -3,7 +3,7 @@ import numpy as np
 from .constants import M_EARTH, MU_EARTH, M_ISS, J2_EARTH, R_EARTH_J2
 
 
-def state_dot(t: float, state: np.ndarray, use_J2: bool):
+def state_dot(t: float, state: np.ndarray, use_J2: bool) -> np.ndarray:
     # state comes as state = [x1, y1, z1, xdot1, ydot1, zdot1, x2, y2, z2, xdot2, ydot2, zdot2]
     x1 = state[0]
     y1 = state[1]

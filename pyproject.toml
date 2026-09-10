@@ -1,10 +1,10 @@
 [project]
 name = "orbital-sim"
 version = "0.1.0"
-description = "Add your description here"
+description = "Earth-ISS orbital simulation with a custom C RK4 integrator"
 readme = "README.md"
 authors = [
-    { name = "Lukasz", email = "153677792+LukPogo@users.noreply.github.com" }
+    { name = "Lukasz", email = "153677792+LukPogo@users.noreply.github.com" },
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -24,6 +24,4 @@ requires = ["uv_build>=0.11.14,<0.12.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.0.3",
-]
+dev = ["pytest>=9.0.3"]

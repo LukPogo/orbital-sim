@@ -37,6 +37,9 @@ def generate_data():
         args=[False],
     )
 
+    if not sol.success:
+        raise RuntimeError(f"Reference integration failed: {sol.message}")
+
     print("Generating data finished...")
     # Blok sprawdzający poprawność mojej wyprowadzonej metody
     initialize_h5_file("data.hdf5")
@@ -56,6 +59,11 @@ def generate_data():
         atol=1e-15,
         args=[True],
     )
+    if not sol.success:
+        raise RuntimeError(f"Reference integration failed: {sol.message}")
+
+    print("Generating J2 data finished...")
+
     h5_save_time_traj("data.hdf5", "rk4_J2", time, trajectory)
     h5_save_time_traj("data.hdf5", "reference_J2", sol.t, sol.y.T)
 

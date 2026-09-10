@@ -1,6 +1,5 @@
 #include <math.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 struct OrbitalData {
     const double m1;
@@ -54,7 +53,7 @@ void two_body_derivative(double t, const double *y, int size_y,
     a2[1] = -G * m1 / r3 * r[1];
     a2[2] = -G * m1 / r3 * r[2];
 
-    if (use_J2 == 1) {
+    if (use_J2) {
         double aJ2[3];
         double r2 = pow(r_abs, 2);
         double r5 = pow(r_abs, 5);
